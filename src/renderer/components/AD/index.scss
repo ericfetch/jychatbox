@@ -1,0 +1,29 @@
+.ad-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    font-size: 12px;
+    padding:4px 10px;
+    
+      .ad-item {
+        margin-right: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+  }
+  
+.ad-item.clickable {
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+    color: #1890ff;
+  }
+}
+
+.ad-item.error {
+  color: #ff4d4f;
+}
+  
+  
+  

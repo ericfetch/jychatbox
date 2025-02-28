@@ -1,0 +1,39 @@
+$text-border-color-default: #a0a0a0;
+$text-border-color-disabled: #e0e0e0;
+$text-border-color-focus: #4a90e2;
+$text-background-default: white;
+$text-background-disabled: #f5f5f5;
+$text-color-default: black;
+$text-color-disabled: #999;
+
+.text-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px;
+  border: 1px solid $text-border-color-default;
+  border-radius: 4px;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.5;
+  font-size: 14px;
+  background-color: $text-background-default;
+  color: $text-color-default;
+  outline: none;
+  transition: border-color 0.3s ease;
+  font-family: 'Microsoft YaHei', sans-serif; 
+
+  &:focus {
+    border-color: $text-border-color-focus;
+  }
+
+  &--disabled {
+    border-color: $text-border-color-disabled;
+    background-color: $text-background-disabled;
+    color: $text-color-disabled;
+    cursor: not-allowed;
+
+    &:focus {
+      border-color: $text-border-color-disabled;
+    }
+  }
+}
