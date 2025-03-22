@@ -1,8 +1,17 @@
 import { AccessTimeFilledSharp, MoreHoriz } from '@mui/icons-material';
-import { Tooltip, Menu, MenuItem } from '@mui/material';
-import { useState } from 'react';
+import {
+  Tooltip,
+  Menu,
+  MenuItem,
+  Switch,
+  FormControlLabel,
+} from '@mui/material';
+import { useState, useEffect } from 'react';
 import './index.scss';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
+import { saveAs } from 'file-saver';
 import AddChatModal from '../ChatEditModal';
+import appStore from '../../utils/store';
 
 function ChatInfoShow(props: any) {
   const {
@@ -18,6 +27,42 @@ function ChatInfoShow(props: any) {
   const open = Boolean(anchorEl);
   // 添加对话设置弹窗状态
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // 使用 useState 管理功能开关
+  const [featureToggles, setFeatureToggles] = useState({
+    dictionary: false,
+    translation: false,
+  });
+
+  // 加载特定对话的功能开关
+  useEffect(() => {
+    if (activeChat?.id) {
+      // 异步获取功能开关
+      appStore
+        .get(`chat_features_${activeChat.id}`)
+        .then((storedToggles: any) => {
+          console.log(storedToggles);
+          setFeatureToggles({
+            dictionary: storedToggles?.dictionary || false,
+            translation: storedToggles?.translation || false,
+          });
+        });
+    }
+  }, [activeChat?.id]);
+
+  // 处理单个功能开关的切换
+  const handleFeatureToggle = (feature: 'dictionary' | 'translation') => {
+    if (activeChat?.id) {
+      const newToggles = {
+        ...featureToggles,
+        [feature]: !featureToggles[feature],
+      };
+
+      // 异步存储功能开关
+      appStore.set(`chat_features_${activeChat.id}`, newToggles);
+      setFeatureToggles(newToggles);
+    }
+  };
 
   // 计算总 tokens 的函数
   const calculateTotalTokens = () => {
@@ -89,13 +134,114 @@ function ChatInfoShow(props: any) {
     setDialogOpen(false);
   };
 
+  // 处理删除当前对话
+  const handleDeleteChat = () => {
+    if (activeChat?.id && window.confirm('确定要删除当前对话吗？')) {
+      appStore.chat.removeChat(activeChat.id);
+      window.location.reload();
+    }
+  };
+
+  // 处理导出今天的对话记录(DOCX格式)
+  const handleExportTodayMessages = () => {
+    if (activeChat?.messages?.length) {
+      // 获取今天的日期（只包含年-月-日）
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // 筛选今天的消息
+      const todayMessages = activeChat.messages.filter((message: any) => {
+        const messageDate = new Date(message.timestamp || message.date || Date.now());
+        return messageDate >= today;
+      });
+      
+      if (todayMessages.length === 0) {
+        alert('今天没有对话记录');
+        return;
+      }
+      
+      // 创建DOCX文档
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: [
+              new Paragraph({
+                text: activeChat.title || '对话记录',
+                heading: HeadingLevel.HEADING_1,
+              }),
+              new Paragraph({
+                text: `导出时间: ${new Date().toLocaleString()}`,
+                spacing: {
+                  after: 200,
+                },
+              }),
+              ...todayMessages.flatMap((msg: any) => [
+                new Paragraph({
+                  text: `${msg.role === 'user' ? '我' : 'AI'}:`,
+                  heading: HeadingLevel.HEADING_3,
+                  spacing: {
+                    before: 200,
+                  },
+                }),
+                ...msg.content.split(/(?<=[.。:！？…])/).map((text: string) => {
+                  return new Paragraph({
+                    text,
+                    spacing: {
+                      after: 200,
+                    },
+                  });
+                }),
+              ]),
+            ],
+          },
+        ],
+      });
+      
+      // 生成并下载文件
+      Packer.toBlob(doc).then(blob => {
+        const exportFileName = `${activeChat.title || '对话记录'}_${new Date().toISOString().split('T')[0]}.docx`;
+        saveAs(blob, exportFileName);
+        handleMenuClose();
+      });
+    } else {
+      alert('没有可导出的对话记录');
+    }
+  };
+
   return (
     <>
       {activeChat?.id && (
         <header className="top-header">
           <div className="chat-header">
             <div className="header-left">
-              <h2>{activeChat?.title}</h2>
+              <FormControlLabel
+                control={<div style={{ fontSize: '14px' }}>划词功能：</div>}
+                label=""
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={featureToggles.dictionary}
+                    onChange={() => handleFeatureToggle('dictionary')}
+                    color="primary"
+                  />
+                }
+                label="词典"
+              />
+
+              {/* 翻译功能开关 */}
+              <FormControlLabel
+                style={{ fontSize: '14px' }}
+                control={
+                  <Switch
+                    checked={featureToggles.translation}
+                    onChange={() => handleFeatureToggle('translation')}
+                    color="primary"
+                  />
+                }
+                label="翻译"
+              />
             </div>
             <div className="header-right">
               <div className="search-container">
@@ -116,7 +262,7 @@ function ChatInfoShow(props: any) {
                   </button>
                 )}
               </div>
-              <AccessTimeFilledSharp style={{ color: '#718096' }} />
+              {/* <AccessTimeFilledSharp style={{ color: '#718096' }} /> */}
               <MoreHoriz
                 style={{ color: '#718096', cursor: 'pointer' }}
                 onClick={handleMenuOpen}
@@ -138,6 +284,10 @@ function ChatInfoShow(props: any) {
                 <MenuItem onClick={handleClearMessages}>清除对话记录</MenuItem>
                 <MenuItem onClick={handleOpenChatSettings}>
                   修改对话设置
+                </MenuItem>
+                <MenuItem onClick={handleDeleteChat}>删除当前对话</MenuItem>
+                <MenuItem onClick={handleExportTodayMessages}>
+                  导出今日记录
                 </MenuItem>
               </Menu>
             </div>

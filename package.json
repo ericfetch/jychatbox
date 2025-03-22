@@ -1,6 +1,7 @@
 {
   "name": "jy-chatbox",
   "description": "自由连接各云服务平台，ai模型驱动的智能对话盒子，个人开发，完全免费",
+  "version": "0.1.0",
   "keywords": [
     "ai chat",
     "chat",
@@ -9,27 +10,21 @@
     "windows",
     "macos"
   ],
-  "homepage": "https://github.com/electron-react-boilerplate/electron-react-boilerplate#readme",
+  "homepage": "https://github.com/ericfetch/jychatbox#readme",
   "bugs": {
-    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
+    "url": "https://github.com/ericfetch/jychatbox/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
+    "url": "git+https://github.com/ericfetch/jychatbox.git"
   },
   "license": "MIT",
   "author": {
     "name": "JY CHATBOX Maintainers",
     "email": "eric.fetech@gmail.com",
-    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate"
+    "url": "https://github.com/ericfetch"
   },
-  "contributors": [
-    {
-      "name": "Amila Welihinda",
-      "email": "amilajack@gmail.com",
-      "url": "https://github.com/amilajack"
-    }
-  ],
+  "contributors": [],
   "main": "./.erb/dll/main.bundle.dev.js",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
@@ -106,11 +101,13 @@
     "@mui/icons-material": "^6.4.5",
     "@mui/material": "^6.4.5",
     "classnames": "^2.5.1",
+    "docx": "^9.3.0",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.8",
     "electron-store": "^10.0.1",
     "electron-updater": "^6.1.4",
     "file-saver": "^2.0.5",
+    "ollama": "^0.5.14",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^10.0.0",
@@ -249,8 +246,8 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "electron-react-boilerplate",
-      "repo": "electron-react-boilerplate"
+      "owner": "ericfetch",
+      "repo": "jychatbox"
     }
   },
   "collective": {

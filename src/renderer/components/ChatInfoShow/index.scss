@@ -6,7 +6,9 @@
     .chat-header {
       display: flex;
       justify-content: space-between;
-
+      .header-left {
+        padding-left: 10px;
+      }
       .header-right {
         display: flex;
         align-items: center;
@@ -44,7 +46,7 @@
       align-items: center;
       max-width: 100%;
       overflow: hidden;
-      margin-top: -10px;
+      margin-top: 4px;
       font-size: 12px;
 
       .chat-tip {

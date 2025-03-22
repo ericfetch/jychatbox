@@ -1,12 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { Alert, Snackbar } from '@mui/material';
 import { saveAs } from 'file-saver';
-import Text from '../../components/Text';
 import './chat.scss';
 import store from '../../utils/store';
-import DashScopeClient from '../../utils/aliyun';
-import TencentAIClient from '../../utils/tencent';
+
 import { Chat, Message } from '../../utils/chatStore';
 import AIAvatar from '../../components/AIAvatar';
 import WelcomeMessage from '../../components/welcome';
@@ -14,16 +11,11 @@ import aiImg from '../../../../assets/ai_avatar.png';
 import AITextShow from '../../components/AITextShow';
 import ChatInfoShow from '../../components/ChatInfoShow';
 import AD from '../../components/AD';
-import DifyClient from '../../utils/dify';
-import OllamaClient from '../../utils/ollama';
 
-const dashScopeClient = new DashScopeClient();
-const client = new TencentAIClient();
-const difyClient = new DifyClient();
-const ollamaClient = new OllamaClient();
+import InputBox from '../../components/InputBox';
+import SecondChatBox from '../../components/SecondChatBox';
 
 export default function ChatPage() {
-  const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,177 +42,30 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !activeChat?.id) return;
+  // 添加消息处理函数
+  const handleMessageReceived = (newMessage: Message) => {
+    // 使用函数式更新来确保我们总是使用最新的messages状态
+    setMessages((prevMessages) => {
+      // 检查消息是否已存在
+      const messageExists = prevMessages.some(
+        (msg) => msg.id === newMessage.id,
+      );
 
-    const userMessage: Message = {
-      id: uuidv4(),
-      role: 'user',
-      content: message,
-      timestamp: Date.now(),
-    };
-
-    store.chat.pushMessage(userMessage);
-    setMessage('');
-    setIsLoading(true);
-
-    const aiResponseMessage: Message = {
-      id: uuidv4(),
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-    };
-    if (activeChat?.modelType === 'aliyun') {
-      // 重置 AbortController
-      dashScopeClient.abort();
-
-      const finalAiMessage: Message = {
-        id: aiResponseMessage.id,
-        role: 'assistant',
-        content: '我在思考……',
-        timestamp: Date.now(),
-      };
-      setMessages((prevMessages) => [...prevMessages, finalAiMessage]);
-
-      // 默认使用非流式调用，除非明确指定了流式调用
-      await dashScopeClient.callWithSSE({
-        appId: activeChat?.appId || '',
-        apiKey: activeChat?.apiKey || '',
-        prompt: message,
-        sessionId: activeChat?.id || uuidv4(),
-        aiRole: activeChat?.aiRole || '',
-        onTokensCount: (tokensCount: number) => {
-          finalAiMessage.tokens = tokensCount;
-        },
-        onMessage: (content: string) => {
-          finalAiMessage.content = content;
-          setMessages((prevMessages) => {
-            const updatedMessages = [...prevMessages];
-            updatedMessages[updatedMessages.length - 1] = {
-              ...finalAiMessage,
-            };
-            return updatedMessages;
-          });
-        },
-        onComplete: () => {
-          store.chat.pushMessage(finalAiMessage);
-          setIsLoading(false);
-        },
-        onError: (error: Error) => {
-          console.error('阿里云AI调用错误:', error);
-          finalAiMessage.content = `调用出错: ${error.message}`;
-          store.chat.pushMessage(finalAiMessage);
-          setIsLoading(false);
-        },
-      });
-    } else if (activeChat?.modelType === 'tencent') {
-      const finalAiMessage: Message = {
-        id: aiResponseMessage.id,
-        role: 'assistant',
-        content: '我在思考……',
-        timestamp: Date.now(),
-      };
-      setMessages((prevMessages) => [...prevMessages, finalAiMessage]);
-
-      await client.callWithSSE({
-        prompt: message,
-        apiKey: activeChat.apiKey,
-        aiRole: activeChat.aiRole || '',
-        onTokensCount: (tokensCount: number) => {
-          finalAiMessage.tokens = tokensCount;
-        },
-        onMessage: (content: string) => {
-          finalAiMessage.content = content;
-          setMessages((prevMessages) => {
-            const updatedMessages = [...prevMessages];
-            updatedMessages[updatedMessages.length - 1] = {
-              ...finalAiMessage,
-            };
-            return updatedMessages;
-          });
-        },
-        onComplete: () => {
-          store.chat.pushMessage(finalAiMessage);
-          setIsLoading(false);
-        },
-        onError: (error: Error) => {
-          console.error('腾讯AI调用错误:', error);
-          finalAiMessage.content = `调用出错: ${error.message}`;
-          store.chat.pushMessage(finalAiMessage);
-          setIsLoading(false);
-        },
-      });
-    } else if (activeChat?.modelType === 'dify') {
-      const finalAiMessage: Message = {
-        id: aiResponseMessage.id,
-        role: 'assistant',
-        content: '我在思考……',
-        timestamp: Date.now(),
-      };
-      setMessages((prevMessages) => [...prevMessages, finalAiMessage]);
-
-      await difyClient.callWithSSE({
-        apiKey: activeChat.apiKey || '',
-        prompt: message,
-        onMessage: (content: string) => {
-          finalAiMessage.content = content;
-          setMessages((prevMessages) => {
-            const updatedMessages = [...prevMessages];
-            updatedMessages[updatedMessages.length - 1] = {
-              ...finalAiMessage,
-            };
-            return updatedMessages;
-          });
-        },
-        onComplete: () => {
-          store.chat.pushMessage(finalAiMessage);
-          setIsLoading(false);
-        },
-        onError: (error: Error) => {
-          console.error('Dify AI调用错误:', error);
-          finalAiMessage.content = `调用出错: ${error.message}`;
-          store.chat.pushMessage(finalAiMessage);
-          setIsLoading(false);
-        },
-      });
-    } else if (activeChat?.modelType === 'ollama') {
-      const finalAiMessage: Message = {
-        id: aiResponseMessage.id,
-        role: 'assistant',
-        content: '我在思考……',
-        timestamp: Date.now(),
-      };
-      setMessages((prevMessages) => [...prevMessages, finalAiMessage]);
-
-      await ollamaClient.callWithSSE({
-        model: store.config.getConfigById(activeChat.modelId)?.subModel || '',
-        messages: [{ role: 'user', content: message }],
-        onMessage: (content: string) => {
-          finalAiMessage.content = content;
-          setMessages((prevMessages) => {
-            const updatedMessages = [...prevMessages];
-            updatedMessages[updatedMessages.length - 1] = {
-              ...finalAiMessage,
-            };
-            return updatedMessages;
-          });
-        },
-        onComplete: () => {
-          store.chat.pushMessage(finalAiMessage);
-          setIsLoading(false);
-        },
-      });
-    }
+      if (messageExists) {
+        // 如果消息已存在，更新它
+        return prevMessages.map((msg) =>
+          msg.id === newMessage.id ? newMessage : msg,
+        );
+      }
+      // 如果是新消息，添加到列表末尾
+      console.log('新消息已添加', newMessage);
+      return [...prevMessages, newMessage];
+    });
   };
 
-  const handleAbort = () => {
-    if (activeChat?.modelType === 'tencent') {
-      client.abort();
-    } else if (activeChat?.modelType === 'aliyun') {
-      dashScopeClient.abort();
-    } else if (activeChat?.modelType === 'dify') {
-      difyClient.abort();
-    }
+  // 处理加载状态变化
+  const handleLoadingChange = (loading: boolean) => {
+    setIsLoading(loading);
   };
 
   // 处理搜索功能
@@ -327,11 +172,6 @@ export default function ChatPage() {
             onClearMessages={handleClearMessages}
             onUpdateChat={handleUpdateChat}
           />
-          {isLoading && (
-            <div className="chat-abort" onClick={handleAbort}>
-              ⏹️中止
-            </div>
-          )}
           {searchText.trim() !== '' && searchResults.length > 0 && (
             <div className="search-navigation">
               <span className="search-info">
@@ -390,26 +230,13 @@ export default function ChatPage() {
             {isLoading && <div className="loading">正在生成...</div>}
             <div ref={messagesEndRef} />
           </div>
-          <div
-            className="chat-input"
-            onKeyDown={(e) =>
-              !isLoading && e.key === 'Enter' && handleSendMessage()
-            }
-          >
-            <Text
-              type="text"
-              placeholder="发送消息..."
-              value={message}
-              onChange={(value: string) => setMessage(value)}
-              disabled={isLoading}
-            />
-            <div
-              className={`submit-btn ${isLoading ? 'disabled' : ''}`}
-              onClick={!isLoading ? handleSendMessage : undefined}
-            >
-              {isLoading ? '生成中...' : '发送'}
-            </div>
-          </div>
+
+          <InputBox
+            key={activeChat?.id}
+            activeChat={activeChat}
+            onMessageReceived={handleMessageReceived}
+            onLoadingChange={handleLoadingChange}
+          />
           <AD />
         </div>
       ) : (

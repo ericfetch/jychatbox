@@ -1,12 +1,28 @@
 {
-  "name": "electron-react-boilerplate",
-  "version": "4.6.0",
-  "description": "A foundation for scalable desktop apps",
+  "name": "jy-chatbox",
+  "description": "自由连接各云服务平台，ai模型驱动的智能对话盒子，个人开发，完全免费",
+  "version": "0.1.0",
+  "keywords": [
+    "ai chat",
+    "chat",
+    "chabox",
+    "chatbot",
+    "windows",
+    "macos"
+  ],
+  "homepage": "https://github.com/ericfetch/jychatbox#readme",
+  "bugs": {
+    "url": "https://github.com/ericfetch/jychatbox/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ericfetch/jychatbox.git"
+  },
   "license": "MIT",
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://github.com/electron-react-boilerplate"
+    "name": "JY CHATBOX Maintainers",
+    "email": "eric.fetech@gmail.com",
+    "url": "https://github.com/ericfetch"
   },
   "main": "./dist/main/main.js",
   "scripts": {

@@ -5,6 +5,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import useAppear from '../../Hooks/useAppear';
 import './index.css';
+import SecondChatBox from '../SecondChatBox';
 
 interface AITextShowProps {
   content: string;
@@ -23,7 +24,7 @@ function AITextShow({ content, searchText }: AITextShowProps) {
     if (isAppear && ref.current) {
       // 使用 requestAnimationFrame 确保在下一帧获取高度
       requestAnimationFrame(() => {
-        const currentHeight = ref.current.scrollHeight;
+        const currentHeight = ref.current?.scrollHeight;
 
         // 只在高度变大时更新最大高度
         if (
@@ -113,16 +114,19 @@ function AITextShow({ content, searchText }: AITextShowProps) {
 
   return (
     <div
+      className="ai-text-show"
       ref={ref}
       // 使用记录的最大高度，保持稳定
       style={{
-        height: maxHeightRef.current || 'auto',
+        minHeight: maxHeightRef.current || 'auto',
       }}
     >
       {isAppear && (
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-          {content}
-        </ReactMarkdown>
+        <div className="ai-text-show-content">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+            {content}
+          </ReactMarkdown>
+        </div>
       )}
     </div>
   );

@@ -13,6 +13,14 @@ class AppStore {
     this.chat = new ChatStore(this.store);
     this.config = new ConfigStore(this.store);
   }
+
+  public get(key: string) {
+    return this.store.get(key);
+  }
+
+  public set(key: string, value: any) {
+    this.store.set(key, value);
+  }
 }
 
 const appStore = new AppStore();

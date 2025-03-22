@@ -26,6 +26,8 @@ import ChatPage from './pages/chat';
 import './App.css';
 import ChatInfoShow from './components/ChatInfoShow';
 import ConfigCenter from './pages/configCenter';
+import SecondChatBox from './components/SecondChatBox';
+import AudioChat from './pages/AudioChat';
 
 function MainLayout() {
   const [showAddChatModal, setShowAddChatModal] = useState(false);
@@ -79,14 +81,10 @@ function MainLayout() {
     setOpenClearDialog(false);
   };
 
-  const handleDeleteChat = (chatId: string) => {
-    store.chat.removeChat(chatId);
-    setChats(store.chat.getChats());
-  };
-
   return (
     <div className="main-layout">
-      <aside className="sidebar">
+      <SecondChatBox activeChat={activeChat} />
+      <aside className="sidebar" style={{ width: '180px' }}>
         <div className="logo">
           <div className="logo-text">JY CHATBOX</div>
           <span className="clear-chat-btn" onClick={handleOpenClearDialog}>
@@ -109,15 +107,6 @@ function MainLayout() {
                 <span className="chat-item-title">
                   <ChatBubbleOutlineOutlined />
                   <span style={{ marginTop: '-4px' }}> {chat.title}</span>
-                </span>
-                <span
-                  className="chat-item-delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteChat(chat.id);
-                  }}
-                >
-                  🗑️
                 </span>
               </div>
             ))}
@@ -175,6 +164,7 @@ export default function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<ChatPage />} />
           <Route path="/config" element={<ConfigCenter />} />
+          <Route path="/audio-chat" element={<AudioChat />} />
         </Route>
       </Routes>
     </Router>
